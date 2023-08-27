@@ -9,7 +9,7 @@
 (defvar evil-magic-server-servers '()
   "Alist where KEY is the port number the server is listening at")
 
-(defvar evil-magic-gaze-pos '()
+(defvar evil-magic-gaze-pos '(0 . 0)
   "Most recent gaze position.")
 
 (defvar evil-magic-server-display-buffer-on-update nil
@@ -164,13 +164,17 @@ new text arrives")
 
 (defun evil-magic-pixel-gaze-distance (pixel-pos)
   "Returns the distance between the pixel position and the gaze position."
-  (evil-magic-pixel-distance pixel-pos ))
+  (evil-magic-pixel-distance pixel-pos evil-magic-gaze-pos))
+
+(defun evil-magic-pixel-comparator (pos1 pos2)
+  "Returns true if pos1 is closer to the gaze position than pos2."
+  (< (evil-magic-pixel-gaze-distance pos1) (evil-magic-pixel-gaze-distance pos2)))
 
 (defun evil-magic-closest-match-to-gaze (str)
   "Returns the pixel position of the match of str in the current buffer
    that is closest to the gaze position."
   (let ((match-positions (evil-magic-matches-pixel-positions str)))
-    (min match-positions )))
+    (apply #'min match-positions :predicate #'evil-magic-pixel-comparator)))
 
 (posn-point (posn-at-x-y 395 64))
 
