@@ -146,10 +146,8 @@ new text arrives")
       (let ((found (cl-search str (substring text start end))))
         (if (not (null found))
             (progn
-                                        ; found + start to convert to pos in substring to pos in entire string
-                                        ; +1 because we want to start the next search after the current match
-              (setq start (+ found start 1))
-              (push start matches) ; because buffer indices are 1 based, we can use the incremented start
+              (push (+ start found) matches)
+              (setq start (+ start found 1))
               )
           (setq start nil)))
       )
