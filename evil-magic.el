@@ -86,8 +86,8 @@ new text arrives")
 
 (defun evil-magic-server-store-gaze (str)
   (let ((expr (read (format "(%s)" str))))
-    (setq evil-magic-gaze-pos expr)
-                                        ;(message "%s" evil-magic-gaze-pos)
+    (setq evil-magic-gaze-pos (cons (car expr) (cadr expr)))
+    (message "%s" evil-magic-gaze-pos)
     ))
 
 (defun evil-magic-server-sentinel (proc msg)
@@ -112,11 +112,6 @@ new text arrives")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;; IPC Code end ;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(window-absolute-pixel-position (point) nil)
-
-(point)
-
-(posn-point (posn-at-x-y 395 64))
 
 (defun evil-magic-get-monitor-resolution()
   "Get the resolution of the active monitor.
@@ -138,6 +133,7 @@ new text arrives")
   (list (window-start) (window-end)))
 
 (defun evil-magic-search-matches (str)
+  "Returns a list of the buffer positions at which str is found."
   (let* ((text (buffer-substring-no-properties (window-start) (window-end)))
          (matches nil)
          (start 0)
@@ -146,10 +142,36 @@ new text arrives")
       (let ((found (cl-search str (substring text start end))))
         (if (not (null found))
             (progn
-              (push (+ found start) matches)
-              (setq start (+ found start 1)))
+                                        ; found + start to convert to pos in substring to pos in entire string
+                                        ; +1 because we want to start the next search after the current match
+              (setq start (+ found start 1))
+              (push start matches) ; because buffer indices are 1 based, we can use the incremented start
+              )
           (setq start nil)))
       )
     matches))
+
+(defun evil-magic-matches-pixel-positions (str)
+  "Returns a list of pixel positions (in the form (x . y)) where the search str was found
+   in the current buffer."
+  (mapcar 'window-absolute-pixel-position (evil-magic-search-matches str)))
+
+(defun evil-magic-pixel-distance (pos1 pos2)
+  "Calculate the distance between two pixel positions."
+  (let ((dx (- (car pos2) (car pos1)))
+        (dy (- (cdr pos2) (cdr pos1))))
+    (sqrt (+ (* dx dx) (* dy dy)))))
+
+(defun evil-magic-pixel-gaze-distance (pixel-pos)
+  "Returns the distance between the pixel position and the gaze position."
+  (evil-magic-pixel-distance pixel-pos ))
+
+(defun evil-magic-closest-match-to-gaze (str)
+  "Returns the pixel position of the match of str in the current buffer
+   that is closest to the gaze position."
+  (let ((match-positions (evil-magic-matches-pixel-positions str)))
+    (min match-positions )))
+
+(posn-point (posn-at-x-y 395 64))
 
 (provide 'evil-magic-server)
