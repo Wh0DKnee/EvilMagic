@@ -194,6 +194,8 @@ Users can also get the frame coordinates by referring the variable
                         (+ (eval (frame-parameter frame 'top))
                            (cdr offset))))))))))
 
+;;;;;;;;;;;;;;;;;;;;;;; Helpers end
+
 (defun evil-magic-get-monitor-resolution()
   "Get the resolution of the active monitor.
    Active means the monitor that emacs is running on.
@@ -207,11 +209,6 @@ Users can also get the frame coordinates by referring the variable
       (let ((geometry (assoc 'geometry active-monitor)))
         (let ((resolution (list (nth 3 geometry) (nth 4 geometry))))
           resolution)))))
-
-(defun evil-magic-visible-buffer-range ()
-  "Return a list (beg, end) that holds the buffer
-   range that is currently visible."
-  (list (window-start) (window-end)))
 
 (defun evil-magic-search-matches (str)
   "Returns a list of the buffer positions at which str is found."
