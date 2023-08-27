@@ -87,7 +87,7 @@ new text arrives")
 (defun evil-magic-server-store-gaze (str)
   (let ((expr (read (format "(%s)" str))))
     (setq evil-magic-gaze-pos expr)
-    (message "%s" evil-magic-gaze-pos)
+                                        ;(message "%s" evil-magic-gaze-pos)
     ))
 
 (defun evil-magic-server-sentinel (proc msg)
@@ -136,5 +136,20 @@ new text arrives")
   "Return a list (beg, end) that holds the buffer
    range that is currently visible."
   (list (window-start) (window-end)))
+
+(defun evil-magic-search-matches (str)
+  (let* ((text (buffer-substring-no-properties (window-start) (window-end)))
+         (matches nil)
+         (start 0)
+         (end (length text)))
+    (while (not (null start))
+      (let ((found (cl-search str (substring text start end))))
+        (if (not (null found))
+            (progn
+              (push (+ found start) matches)
+              (setq start (+ found start 1)))
+          (setq start nil)))
+      )
+    matches))
 
 (provide 'evil-magic-server)
