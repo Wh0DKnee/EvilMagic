@@ -85,8 +85,12 @@ new text arrives")
   (evil-magic-server-store-gaze string))
 
 (defun evil-magic-server-store-gaze (str)
-  (let ((expr (read (format "(%s)" str))))
-    (setq evil-magic-gaze-pos (cons (car expr) (cadr expr)))
+  (let ((expr (read (format "(%s)" str)))
+        (monitor-width (car (evil-magic-get-monitor-resolution)))
+        (monitor-height (cadr (evil-magic-get-monitor-resolution))))
+    (setq evil-magic-gaze-pos (cons
+                               (* (car expr) monitor-width)
+                               (* (cadr expr) monitor-height)))
     (message "%s" evil-magic-gaze-pos)
     ))
 
@@ -149,12 +153,12 @@ new text arrives")
               )
           (setq start nil)))
       )
-    matches))
+    (mapcar (lambda (x) (+ x (window-start))) matches)))
 
 (defun evil-magic-matches-pixel-positions (str)
   "Returns a list of pixel positions (in the form (x . y)) where the search str was found
    in the current buffer."
-  (mapcar 'window-absolute-pixel-position (evil-magic-search-matches str)))
+  (mapcar #'window-absolute-pixel-position (evil-magic-search-matches str)))
 
 (defun evil-magic-pixel-distance (pos1 pos2)
   "Calculate the distance between two pixel positions."
@@ -176,6 +180,30 @@ new text arrives")
   (let ((match-positions (evil-magic-matches-pixel-positions str)))
     (apply #'min match-positions :predicate #'evil-magic-pixel-comparator)))
 
+(defun evil-magic-read-mind (str)
+  "Magically moves the cursor the the match of the search string that's
+   closest to where the user is looking."
+  (let* ((match-pixel-pos (evil-magic-closest-match-to-gaze str))
+         (match-buffer-pos (posn-point (posn-at-x-y (car match-pixel-pos) (cdr match-pixel-pos)))))
+    (goto-char match-buffer-pos)))
+
 (posn-point (posn-at-x-y 395 64))
+(point)
+
+(defun highlight-position (position)
+  "Highlight the character at the given position."
+  (let ((overlay (make-overlay position (1+ position))))
+    (overlay-put overlay 'face '(:background "yellow"))))
+
+(evil-magic-read-mind "str")
+(evil-magic-closest-match-to-gaze "str")
+(evil-magic-search-matches "str")
+(window-absolute-pixel-position (point))
+(evil-magic-matches-pixel-positions "str")
+(highlight-position (window-start))
+
+(let* ((match-pixel-pos (cadr (evil-magic-matches-pixel-positions "(defun evil-magic-matches-pixel-positions")))
+       (match-buffer-pos (posn-point (posn-at-x-y (car match-pixel-pos) (cdr match-pixel-pos)))))
+  (highlight-position match-buffer-pos))
 
 (provide 'evil-magic-server)
