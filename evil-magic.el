@@ -1,4 +1,4 @@
-;; TCP/Socket code taken from https://gist.github.com/jclosure
+;; TCP/Socket code taken from https://gist.github.com/jclosure/cb34dbd813c6bd1e3c4e128ad87d69c7
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;; IPC Code start ;;;;;;;;;;;;;;;;;;;;;;;;;;
 (require 'cl-lib)
@@ -8,6 +8,9 @@
 
 (defvar evil-magic-server-servers '()
   "Alist where KEY is the port number the server is listening at")
+
+(defvar evil-magic-gaze-pos '()
+  "Most recent gaze position.")
 
 (defvar evil-magic-server-display-buffer-on-update nil
   "If non-nil, force the process buffer to be visible whenever
@@ -82,10 +85,13 @@ new text arrives")
                  (if moving (goto-char (point-max))))))))
 
 (defun evil-magic-server-filter (proc string)
-  (evil-magic-server-eval string))
+  (evil-magic-server-store-gaze string))
 
-(defun evil-magic-server-eval (string)
-  (eval (car (read-from-string (format "(progn %s)" string)))))
+(defun evil-magic-server-store-gaze (str)
+  (let ((expr (read (format "(%s)" str))))
+    (setq evil-magic-gaze-pos expr)
+    (message "%s" evil-magic-gaze-pos)
+    ))
 
 (defun evil-magic-server-sentinel (proc msg)
   (cond
@@ -119,9 +125,8 @@ new text arrives")
   "Get the resolution of the active monitor.
    Active means the monitor that emacs is running on.
    Return value is a list of the form (width height)."
-  (interactive)
+  (interactive) ; Should probably assert that result of cl-remove-if has length one.
   (let ((monitors (display-monitor-attributes-list)))
-                                        ; Should probably assert that result of cl-remove-if has length one.
     (let ((active-monitor (car
                            (cl-remove-if
                             (lambda (x) (null (cdr (assoc 'frames x))))

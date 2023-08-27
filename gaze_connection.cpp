@@ -31,13 +31,11 @@ int connectSocket() {
 
 void gaze_point_callback(tobii_gaze_point_t const *gaze_point, void *user_data) {
     if (gaze_point->validity != TOBII_VALIDITY_VALID)
-    {
-    	return;
-    }
-    std::string command = "(message \"x: " + std::to_string(gaze_point->position_xy[0]) + "\ny: " + std::to_string(gaze_point->position_xy[1]) + "\")";
-    printf("Gaze point: %f, %f\n",
-           gaze_point->position_xy[0],
-           gaze_point->position_xy[1]);
+        {
+            return;
+        }
+    std::string x_space_y = std::to_string(gaze_point->position_xy[0]) + " " + std::to_string(gaze_point->position_xy[1]);
+    auto command = x_space_y;
     send(*static_cast<int*>(user_data), command.c_str(), strlen(command.c_str()), 0);
 }
 
@@ -61,11 +59,11 @@ int main() {
     tobii_device_t *device;
     error = tobii_device_create(api, url, &device);
     assert(error == TOBII_ERROR_NO_ERROR);
-    
+
     int conn = connectSocket();
     error = tobii_gaze_point_subscribe(device, gaze_point_callback, &conn);
     assert(error == TOBII_ERROR_NO_ERROR);
-    
+
     while (1) {
         error = tobii_wait_for_callbacks(1, &device);
         assert(error == TOBII_ERROR_NO_ERROR || error == TOBII_ERROR_TIMED_OUT);
