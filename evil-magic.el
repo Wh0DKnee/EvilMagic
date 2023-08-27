@@ -42,16 +42,15 @@ new text arrives")
                                    (process-contact client :name)))
                         evil-magic-server-clients))))
 
-(cl-defun evil-magic-server-start (port &optional (display-buffer-on-update nil)
-                                        (buffer-major-mode 'text-mode))
+(cl-defun evil-magic-server-start (&optional (display-buffer-on-update nil)
+                                             (buffer-major-mode 'text-mode))
   "Start a TCP server listening at PORT"
-  (interactive
-   (list (read-number "Enter the port number to listen to: " 9999)))
-  (let* ((proc-name (evil-magic-server-make-process-name port))
+  (interactive)
+  (let* ((proc-name (evil-magic-server-make-process-name 9999))
          (buffer-name (format "*%s*" proc-name)))
     (unless (process-status proc-name)
       (make-network-process :name proc-name :buffer buffer-name
-                            :family 'ipv4 :service port
+                            :family 'ipv4 :service 9999
                             :sentinel 'evil-magic-server-sentinel
                             :filter 'evil-magic-server-filter :server 't)
       (with-current-buffer buffer-name
@@ -61,12 +60,10 @@ new text arrives")
     ;; (display-buffer buffer-name)
     ))
 
-(defun evil-magic-server-stop (port)
-  "Stop an emacs TCP server at PORT"
-  (interactive
-   (list (read-number "Enter the port number the server is listening to: "
-                      9999)))
-  (let ((server-proc (evil-magic-server-get-process port)))
+(defun evil-magic-server-stop ()
+  "Stop an emacs TCP server at PORT 9999"
+  (interactive)
+  (let ((server-proc (evil-magic-server-get-process 9999)))
     (evil-magic-server-delete-clients server-proc)
     (delete-process server-proc)))
 
